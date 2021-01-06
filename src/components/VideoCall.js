@@ -185,7 +185,7 @@ const VideoCall = () => {
   }
   
   function handleSendChannelStatusChange(event) {
-	  
+	console.log("Message SendChannel is: " + event.data);  
     if (sendChannel) {
       var state = sendChannel.readyState;
     console.log('The state is ' + state);
