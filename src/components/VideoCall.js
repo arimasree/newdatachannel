@@ -176,7 +176,7 @@ const VideoCall = () => {
   
   function handleNegotiation(event){
 	  
-	  //console.log("Sending offer to peer");
+	  console.log("Sending offer to peer");
   peer.createOffer(setLocalAndSendMessage, handleCreateOfferError);
   }
   
