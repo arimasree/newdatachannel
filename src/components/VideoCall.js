@@ -133,8 +133,8 @@ const VideoCall = () => {
   function createPeerConnection() {
     try {
      
-	  peer.onnegotiationneeded = handleNegotiation;		  
-	  console.log("onnegotiationneeded");
+	//  peer.onnegotiationneeded = handleNegotiation;		  
+	  //console.log("onnegotiationneeded");
       peer.onaddstream = handleRemoteStreamAdded;
 	  console.log("onstreamadded");
       peer.onicecandidate = handleIceCandidate;
@@ -148,6 +148,7 @@ const VideoCall = () => {
 
 	    //sendChannel = peer.createDataChannel("sendDataChannel",{negotiated: true, id: 0});
 		sendChannel = peer.createDataChannel("sendDataChannel");
+		
 	 //  sendChannel = peer.createDataChannel("sendDataChannel",{reliable: false});
 	
 // Reliable Data Channels not yet supported in Chrome
@@ -176,8 +177,8 @@ const VideoCall = () => {
   
   function handleNegotiation(event){
 	  
-	  console.log("Sending offer to peer");
-  peer.createOffer(setLocalAndSendMessage, handleCreateOfferError);
+	 // console.log("Sending offer to peer");
+  //peer.createOffer(setLocalAndSendMessage, handleCreateOfferError);
   }
   
   function handleDataChannelReceiveMessage(event) {
@@ -241,7 +242,7 @@ const VideoCall = () => {
 
   function doCall() {
     console.log("do call");
-//    peer.createOffer(setLocalAndSendMessage, handleCreateOfferError);
+peer.createOffer(setLocalAndSendMessage, handleCreateOfferError);
   }
 
   function doAnswer() {
