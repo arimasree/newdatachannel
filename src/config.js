@@ -20,8 +20,8 @@ const config = {
   PEER_CONFIG: {
     iceServers: [
       {
-        urls: "stun:ec2-18-221-102-19.us-east-2.compute.amazonaws.com:3478",
-		// urls:"stun:stun.l.google.com:19302"
+        //urls: "stun:ec2-18-221-102-19.us-east-2.compute.amazonaws.com:3478",
+		 urls:"stun:stun.l.google.com:19302"
       },
       // {
       //   urls: "turn:ec2-18-221-102-19.us-east-2.compute.amazonaws.com:3478",
