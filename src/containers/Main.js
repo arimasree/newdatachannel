@@ -1,33 +1,38 @@
-import {
-  Avatar,
-  Button,
-  Card,
-  Grid,
-  makeStyles,
-  TextField,
-} from "@material-ui/core";
-import html2canvas from "html2canvas";
-import React, { useState } from "react";
+import { Button, Card, Grid, makeStyles } from "@material-ui/core";
+import React, { useState, useRef } from "react";
 
 import config from "../config";
-
-import Snapshot from "../components/Snapshot";
+import AccordionList from "../components/AccordionList";
+import Annotation from "../components/Annotation";
 import VideoCall from "../components/VideoCall";
-
-const sendData = (payload) => {
-  console.log(payload);
-};
+import { Tools } from "../annotations";
 
 const useStyles = makeStyles({
   root: {
-    marginTop: 50,
+    marginTop: 20,
   },
   canvas: {
-    height: 700,
-    width: 350,
+    height: 600,
+    width: 300,
+  },
+  tools: {
+    height: 600,
+    width: 100,
+    backgroundColor: "black",
+    color: "#fff",
+    textAlign: "center",
+  },
+  toolSelected: {
+    backgroundColor: "#3F51B5",
+  },
+  tool: {
+    borderTop: "0.5px solid #fff",
+  },
+  toolImg: {
+    width: "65%",
   },
   grid: {
-    height: 700,
+    height: 600,
     width: 300,
   },
   toolBtn: {
@@ -48,37 +53,50 @@ const useStyles = makeStyles({
 
 function Main() {
   const classes = useStyles();
-  const snapShotEle = document.getElementById("snapShot");
-  const [sketch] = useState(null);
-  const [tool, setTool] = useState("Pencil");
-  const [snapshot, setSnapshot] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [isLaserBeam, setLaserBeam] = useState(false);
-  const [textAnnotation, setTextAnnotation] = useState(null);
 
-  // const handleAnnotations = () => {
-  //   if (sketch) {
-  //     const {
-  //       objects: [properties],
-  //     } = sketch.toJSON();
-  //     if (properties) {
-  //       let data = { tool };
-  //       if (tool === "Select") {
-  //         data.tool = "Text";
-  //         ["height", "width", "left", "top", "text"].forEach(
-  //           (field) => (data[field] = properties[field])
-  //         );
-  //       } else {
-  //         const [{ fields }] = config.ANNOTATIONS.filter(
-  //           (annotation) => annotation.tool === tool
-  //         );
-  //         fields.forEach((field) => (data[field] = properties[field]));
-  //         sketch._fc._objects = []; //  Clear Previous Annotation
-  //       }
-  //       return sendData({ ...data });
-  //     }
-  //   }
-  // };
+  const [sketch, setSketch] = useState(null);
+  const [tool, setTool] = useState("Pencil");
+
+  const [isLaserBeam, setLaserBeam] = useState(false);
+  const videoCallRef = useRef();
+
+  const sendData = (data) => {
+    if (videoCallRef.current) {
+      videoCallRef.current.sendData(data);
+    } else {
+      console.log("Data channel not ready");
+    }
+  };
+
+  const handleAnnotations = () => {
+    if (sketch) {
+      const {
+        objects: [properties],
+      } = sketch.toJSON();
+      if (properties) {
+        let data = { tool };
+        if (tool === "Select") {
+          data.tool = "Text";
+          ["height", "width", "left", "top", "text"].forEach(
+            (field) => (data[field] = properties[field])
+          );
+        } else {
+          const [{ fields }] = config.ANNOTATIONS.filter(
+            (annotation) => annotation.tool === tool
+          );
+          fields.forEach((field) => (data[field] = properties[field]));
+          sketch._fc._objects = []; //  Clear Previous Annotation
+        }
+        return sendData({ ...data });
+      }
+    }
+  };
+
+  const handleLaserBeamClick = () => {
+    if (sketch) sketch.clear();
+    setTool(null);
+    setLaserBeam(true);
+  };
 
   const handleLaserBeam = ({ screenX, screenY }) => {
     if (sketch && isLaserBeam) {
@@ -92,23 +110,17 @@ function Main() {
 
   const handleClear = () => {
     if (sketch) {
-      sketch.clear(); //  Clear All Annotations
+      sketch.clear();
       return sendData({ tool: "Clear" });
     }
   };
 
   const handleText = () => {
-    if (sketch && textAnnotation) {
-      sketch.addText(textAnnotation);
-      setTool("Select");
-      setTextAnnotation(null);
-    }
-  };
-
-  const handleSnapshot = async () => {
     if (sketch) {
-      const snapShotCanvas = await html2canvas(snapShotEle);
-      setSnapshot(snapShotCanvas.toDataURL());
+      sketch.clear();
+      setLaserBeam(false);
+      sketch.addText("Edit Text");
+      setTool("Select");
     }
   };
 
@@ -117,89 +129,23 @@ function Main() {
       <Grid item>
         <Card>
           <Grid
-            alignItems="center"
-            className={classes.grid}
             container
-            direction="column"
+            className={classes.canvas}
             justify="center"
             spacing={2}
+            id="snapShot"
+            onMouseMoveCapture={handleLaserBeam}
+            disabled={isLaserBeam}
           >
-            <Grid item align="center">
-              {config.ANNOTATIONS.map((annotation) => (
-                <Button
-                  className={classes.toolBtn}
-                  color={tool === annotation.tool ? "primary" : "secondary"}
-                  key={annotation.tool}
-                  onClick={() => setTool(annotation.tool)}
-                  size="small"
-                  variant="contained"
-                >
-                  {annotation.tool}
-                </Button>
-              ))}
-              <Button
-                className={classes.toolBtn}
-                color={isLaserBeam ? "primary" : "secondary"}
-                key="Laser Beam"
-                onClick={() => setLaserBeam(!isLaserBeam)}
-                size="small"
-                variant="contained"
-              >
-                {!isLaserBeam ? "Laser Beam" : "Stop Laser Beam"}
-              </Button>
-              <TextField
-                className={classes.toolBtn}
-                label="Text"
-                onChange={({ target: { value } }) => setTextAnnotation(value)}
-                value={textAnnotation || ""}
-                variant="outlined"
-              />
-              <Button
-                className={classes.toolBtn}
-                color="secondary"
-                key="Add Text"
-                onClick={handleText}
-                size="small"
-                variant="contained"
-                disabled={!sketch || !textAnnotation}
-              >
-                Add Text
-              </Button>
-              {snapshot && (
-                <Avatar
-                  className={classes.thumbnail}
-                  onClick={() => setOpen(true)}
-                  variant="square"
-                >
-                  <img
-                    alt="snapshot"
-                    src={snapshot}
-                    className={classes.snapShot}
-                  />
-                </Avatar>
-              )}
-              <Button
-                className={classes.toolBtn}
-                color="secondary"
-                disabled={!sketch}
-                key="Take Snapshot"
-                onClick={handleSnapshot}
-                size="small"
-                variant="contained"
-              >
-                Take Snapshot
-              </Button>
-              <Button
-                className={classes.toolBtn}
-                color="secondary"
-                disabled={!sketch}
-                onClick={handleClear}
-                size="small"
-                variant="outlined"
-              >
-                Clear
-              </Button>
-            </Grid>
+            <VideoCall ref={videoCallRef} />
+            <Annotation
+              ref={(c) => setSketch(c)}
+              tool={Tools[tool]}
+              lineWidth={2}
+              onChange={handleAnnotations}
+              height={600}
+              width={300}
+            />
           </Grid>
         </Card>
       </Grid>
@@ -207,29 +153,83 @@ function Main() {
         <Card>
           <Grid
             container
-            className={classes.canvas}
+            className={classes.tools}
             justify="center"
             spacing={2}
-            style={{ backgroundColor: "#000000d1" }}
           >
-            <span
-              id="snapShot"
-              onMouseMoveCapture={handleLaserBeam}
-              disabled={isLaserBeam}
+            <Grid item>
+              <p>
+                <b>Tools</b>
+              </p>
+            </Grid>
+            {config.ANNOTATIONS.map((annotation) => (
+              <Grid
+                item
+                className={
+                  tool === annotation.tool ? classes.toolSelected : classes.tool
+                }
+                key={annotation.tool}
+                onClick={() => {
+                  setLaserBeam(false);
+                  setTool(annotation.tool);
+                }}
+              >
+                <Button>
+                  <img
+                    className={classes.toolImg}
+                    src={`/toolImages/${annotation.tool.toLowerCase()}.png`}
+                    alt={annotation.tool}
+                  />
+                </Button>
+              </Grid>
+            ))}
+            <Grid
+              item
+              className={isLaserBeam ? classes.toolSelected : classes.tool}
+              onClick={handleLaserBeamClick}
             >
-              <VideoCall />
-            </span>
+              <Button>
+                <img
+                  className={classes.toolImg}
+                  src={"/toolImages/laser_beam.png"}
+                  alt="Laser Beam"
+                />
+              </Button>
+            </Grid>
+            <Grid
+              item
+              className={
+                tool === "Select" ? classes.toolSelected : classes.tool
+              }
+              onClick={handleText}
+            >
+              <Button>
+                <img
+                  className={classes.toolImg}
+                  src={"/toolImages/text.png"}
+                  alt="Text"
+                />
+              </Button>
+            </Grid>
+            <Grid item className={classes.tool} onClick={handleClear}>
+              <Button>
+                <img
+                  className={classes.toolImg}
+                  src={"/toolImages/undo.png"}
+                  alt="Undo"
+                />
+              </Button>
+            </Grid>
+            <Grid item className={classes.tool}>
+              <p>More</p>
+              <Button>
+                <img src={"/toolImages/more.png"} alt="More" />
+              </Button>
+            </Grid>
           </Grid>
         </Card>
       </Grid>
-      {snapshot && (
-        <Snapshot
-          src={snapshot}
-          open={open}
-          closeModal={() => setOpen(false)}
-          sendData={sendData}
-        />
-      )}
+      <AccordionList />
     </Grid>
   );
 }
