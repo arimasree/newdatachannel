@@ -20,8 +20,8 @@ const config = {
   PEER_CONFIG: {
     iceServers: [
       {
-        //urls: "stun:ec2-18-221-102-19.us-east-2.compute.amazonaws.com:3478",
-		 urls:"stun:stun.l.google.com:19302"
+        urls: "stun:ec2-18-221-102-19.us-east-2.compute.amazonaws.com:3478",
+		// urls:"stun:stun.l.google.com:19302"
       },
       // {
       //   urls: "turn:ec2-18-221-102-19.us-east-2.compute.amazonaws.com:3478",
@@ -31,8 +31,8 @@ const config = {
       // },
     ],
   },
-   SIGNALING_SERVER: "https://vast-headland-11741.herokuapp.com/",
-  //SIGNALING_SERVER: "https://remoteassistancega.webrtcdemoapp.com",
+   //SIGNALING_SERVER: "https://vast-headland-11741.herokuapp.com/",
+  SIGNALING_SERVER: "https://remoteassistancega.webrtcdemoapp.com",
 
   SOCKET_ROOM: "foo",
   SOCKET_TOPICS: {
